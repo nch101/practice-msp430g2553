@@ -79,12 +79,18 @@ typedef enum
 
 typedef struct
 {
+    GPIO_TypeDef    *Base;
     GPIO_Pin_u8     Pin;
     GPIO_Mode_u8    Mode;
     GPIO_Pull_u8    Pull;
 } GPIO_InitTypeDef;
 
-void GPIO(GPIO_TypeDef *_GPIOx, GPIO_InitTypeDef _GPIO_Init);
-void GPIO_setOutputSignal_void(GPIO_State_u8 GPIO_State);
-uint8_t GPIO_getInputSignal_u8();
-void GPIO_toggleOutputSignal_void();
+// GPIO Init
+void GPIO_init_void(GPIO_InitTypeDef *GPIO_Init);
+
+// Output
+void GPIO_setOutputSignal_void(GPIO_InitTypeDef *GPIO_Init, GPIO_State_u8 GPIO_State);
+void GPIO_toggleOutputSignal_void(GPIO_InitTypeDef *GPIO_Init);
+
+// Input
+GPIO_State_u8 GPIO_getInputSignal_u8(GPIO_InitTypeDef *GPIO_Init);

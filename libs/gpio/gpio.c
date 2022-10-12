@@ -1,29 +1,25 @@
 #include <msp430.h>
 #include "gpio.h"
 
-
-static GPIO_TypeDef        *GPIOx;
-static GPIO_InitTypeDef    GPIO_Init;
-
-static void GPIO_OutputInit_void()
+static void GPIO_OutputInit_void(GPIO_InitTypeDef *GPIO_Init)
 {
-    GPIOx->PxDIR |= GPIO_Init.Pin;
+    GPIO_Init->Base->PxDIR |= GPIO_Init->Pin;
 };
 
-static void GPIO_InputInit_void()
+static void GPIO_InputInit_void(GPIO_InitTypeDef *GPIO_Init)
 {
-    GPIOx->PxDIR &= ~(GPIO_Init.Pin);
+    GPIO_Init->Base->PxDIR &= ~(GPIO_Init->Pin);
 
-    switch (GPIO_Init.Pull)
+    switch (GPIO_Init->Pull)
     {
         case GPIO_PULLUP:
-            GPIOx->PxREN |= GPIO_Init.Pin;
-            GPIOx->PxOUT |= GPIO_Init.Pin;
+            GPIO_Init->Base->PxREN |= GPIO_Init->Pin;
+            GPIO_Init->Base->PxOUT |= GPIO_Init->Pin;
             break;
 
         case GPIO_PULLDOWN:
-            GPIOx->PxREN |= GPIO_Init.Pin;
-            GPIOx->PxOUT &= ~(GPIO_Init.Pin);
+            GPIO_Init->Base->PxREN |= GPIO_Init->Pin;
+            GPIO_Init->Base->PxOUT &= ~(GPIO_Init->Pin);
             break;
 
         case GPIO_NOPULL:
@@ -32,16 +28,16 @@ static void GPIO_InputInit_void()
     }
 };
 
-static void GPIO_InterruptRisingEdgeInit_void()
+static void GPIO_InterruptRisingEdgeInit_void(GPIO_InitTypeDef *GPIO_Init)
 {
-    GPIOx->PxIE     |= GPIO_Init.Pin;
-    GPIOx->PxIES    &= ~(GPIO_Init.Pin);
+    GPIO_Init->Base->PxIE     |= GPIO_Init->Pin;
+    GPIO_Init->Base->PxIES    &= ~GPIO_Init->Pin;
 };
 
-static void GPIO_InterruptFallingEdgeInit_void()
+static void GPIO_InterruptFallingEdgeInit_void(GPIO_InitTypeDef *GPIO_Init)
 {
-    GPIOx->PxIE     |= GPIO_Init.Pin;
-    GPIOx->PxIES    |= GPIO_Init.Pin;
+    GPIO_Init->Base->PxIE     |= GPIO_Init->Pin;
+    GPIO_Init->Base->PxIES    |= GPIO_Init->Pin;
 };
 
 static uint8_t isInterruptPending()
@@ -49,29 +45,26 @@ static uint8_t isInterruptPending()
     // To do: Check interrupt flag vs Interrupt pin
 };
 
-void GPIO(GPIO_TypeDef *_GPIOx, GPIO_InitTypeDef _GPIO_Init)
+void GPIO_init_void(GPIO_InitTypeDef *GPIO_Init)
 {
-    GPIOx = _GPIOx;
-    GPIO_Init = _GPIO_Init;
-
-    switch (GPIO_Init.Mode)
+    switch (GPIO_Init->Mode)
     {
         case GPIO_MODE_INPUT:
-            GPIO_InputInit_void();
+            GPIO_InputInit_void(GPIO_Init);
             break;
 
         case GPIO_MODE_OUTPUT:
-            GPIO_OutputInit_void();
+            GPIO_OutputInit_void(GPIO_Init);
             break;
 
         case GPIO_MODE_IT_RISING:
-            GPIO_InterruptRisingEdgeInit_void();
-            GPIO_InputInit_void();
+            GPIO_InterruptRisingEdgeInit_void(GPIO_Init);
+            GPIO_InputInit_void(GPIO_Init);
             break;
 
         case GPIO_MODE_IT_FALLING:
-            GPIO_InterruptFallingEdgeInit_void();
-            GPIO_InputInit_void();
+            GPIO_InterruptFallingEdgeInit_void(GPIO_Init);
+            GPIO_InputInit_void(GPIO_Init);
             break;
 
         default:
@@ -79,14 +72,31 @@ void GPIO(GPIO_TypeDef *_GPIOx, GPIO_InitTypeDef _GPIO_Init)
     }
 };
 
-void GPIO_setOutputSignal_void(GPIO_State_u8 GPIO_State)
+void GPIO_setOutputSignal_void(GPIO_InitTypeDef *GPIO_Init, GPIO_State_u8 GPIO_State)
 {
-    GPIOx->PxOUT |= GPIO_State ? GPIO_Init.Pin : !(GPIO_Init.Pin);
+    if (GPIO_State == GPIO_HIGH)
+    {
+        GPIO_Init->Base->PxOUT |= GPIO_Init->Pin;
+    } else
+    {
+        GPIO_Init->Base->PxOUT &= ~GPIO_Init->Pin;
+    }
 };
 
-void GPIO_toggleOutputSignal_void()
+void GPIO_toggleOutputSignal_void(GPIO_InitTypeDef *GPIO_Init)
 {
-    GPIOx->PxOUT ^= GPIO_Init.Pin;
+    GPIO_Init->Base->PxOUT ^= GPIO_Init->Pin;
+};
+
+GPIO_State_u8 GPIO_getInputSignal_u8(GPIO_InitTypeDef *GPIO_Init)
+{
+    if ((GPIO_Init->Base->PxIN & GPIO_Init->Pin) != GPIO_Init->Pin)
+    {
+        return GPIO_HIGH;
+    } else
+    {
+        return GPIO_LOW;
+    }
 };
 
 #pragma vector = PORT1_VECTOR
