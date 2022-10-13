@@ -1,4 +1,3 @@
-#include <msp430.h>
 #include "gpio.h"
 
 static void GPIO_OutputInit_void(GPIO_InitTypeDef *GPIO_Init)
@@ -30,19 +29,16 @@ static void GPIO_InputInit_void(GPIO_InitTypeDef *GPIO_Init)
 
 static void GPIO_InterruptRisingEdgeInit_void(GPIO_InitTypeDef *GPIO_Init)
 {
-    GPIO_Init->Base->PxIE     |= GPIO_Init->Pin;
-    GPIO_Init->Base->PxIES    &= ~GPIO_Init->Pin;
+    GPIO_Init->Base->PxIE       |= GPIO_Init->Pin;
+    GPIO_Init->Base->PxIES      &= ~GPIO_Init->Pin;
+    GPIO_Init->Base->PxIFG      &= ~GPIO_Init->Pin;
 };
 
 static void GPIO_InterruptFallingEdgeInit_void(GPIO_InitTypeDef *GPIO_Init)
 {
-    GPIO_Init->Base->PxIE     |= GPIO_Init->Pin;
-    GPIO_Init->Base->PxIES    |= GPIO_Init->Pin;
-};
-
-static uint8_t isInterruptPending()
-{
-    // To do: Check interrupt flag vs Interrupt pin
+    GPIO_Init->Base->PxIE       |= GPIO_Init->Pin;
+    GPIO_Init->Base->PxIES      |= GPIO_Init->Pin;
+    GPIO_Init->Base->PxIFG      &= ~GPIO_Init->Pin;
 };
 
 void GPIO_init_void(GPIO_InitTypeDef *GPIO_Init)
@@ -99,15 +95,77 @@ GPIO_State_u8 GPIO_getInputSignal_u8(GPIO_InitTypeDef *GPIO_Init)
     }
 };
 
-#pragma vector = PORT1_VECTOR
-__interrupt void GPIO_handlingPort1IRQ_void()
+void __attribute__((weak)) GPIO_processingPortIRQ_void()
 {
-    // To do: Call process interrupt function
+    /* Note: This function should not be modified, when the processing is needed,
+     *          the GPIO_processingPortIRQ_void could be implemented in the user file
+     */
 };
 
-void __attribute__((weak)) GPIO_processingPortIRQ_void();
-
-void GPIO_processingPortIRQ_void()
+#if (MCU_CONFIG_PORT1_EXTI_IRQ_EN == ON)
+static bool GPIO_isInterruptPendingOnPort1_bool(GPIO_Pin_u8 GPIO_Pin)
 {
-    // Add comment
+    if ((GPIO_1->PxIFG & GPIO_Pin) == GPIO_Pin)
+    {
+        return true;
+    } else
+    {
+        return false;
+    }
 };
+
+static void GPIO_port1IRQHandler_void(GPIO_Pin_u8 GPIO_Pin)
+{
+    if (GPIO_isInterruptPendingOnPort1_bool(GPIO_Pin) == true)
+    {
+        GPIO_1->PxIFG &= ~GPIO_Pin;
+        GPIO_processingPortIRQ_void();
+    }
+};
+
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+#pragma vector=PORT1_VECTOR
+__interrupt void GPIO_handlingPort1IRQ_void(void)
+#elif defined(__GNUC__)
+void __attribute__ ((interrupt(PORT1_VECTOR))) GPIO_handlingPort1IRQ_void (void)
+#else
+#error Compiler not supported!
+#endif
+{
+    GPIO_port1IRQHandler_void(GPIO_PIN_3);
+};
+#endif // MCU_CONFIG_PORT1_EXTI_IRQ_EN
+
+#if (MCU_CONFIG_PORT2_EXTI_IRQ_EN == ON)
+static bool GPIO_isInterruptPendingOnPort2_bool(GPIO_Pin_u8 GPIO_Pin)
+{
+    if ((GPIO_2->PxIFG & GPIO_Pin) == GPIO_Pin)
+    {
+        return true;
+    } else
+    {
+        return false;
+    }
+};
+
+static void GPIO_port2IRQHandler_void(GPIO_Pin_u8 GPIO_Pin)
+{
+    if (GPIO_isInterruptPendingOnPort2_bool(GPIO_Pin) == true)
+    {
+        GPIO_2->PxIFG &= ~GPIO_Pin;
+        GPIO_processingPortIRQ_void();
+    }
+};
+
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+#pragma vector=PORT2_VECTOR
+__interrupt void GPIO_handlingPort2IRQ_void(void)
+#elif defined(__GNUC__)
+void __attribute__ ((interrupt(PORT2_VECTOR))) GPIO_handlingPort2IRQ_void (void)
+#else
+#error Compiler not supported!
+#endif
+{
+    GPIO_port2IRQHandler_void(GPIO_PIN_3);
+};
+#endif // MCU_CONFIG_PORT2_EXTI_IRQ_EN

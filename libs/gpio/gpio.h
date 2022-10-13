@@ -1,4 +1,8 @@
 #include <stdint.h>
+#include <stdbool.h>
+#include <msp430.h>
+
+#include "mcu_config.h"
 
 /** @defgroup GPIO_pins_define GPIO pins define
   * @{
