@@ -1,3 +1,4 @@
+#include "mcu_config.h"
 #include "gpio.h"
 
 static void GPIO_OutputInit_void(GPIO_InitTypeDef *GPIO_Init)
