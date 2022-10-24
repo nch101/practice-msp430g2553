@@ -1,4 +1,3 @@
-#include <msp430.h>
 #include "gpio.h"
 
 GPIO_InitTypeDef led10, button13;

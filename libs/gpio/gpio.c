@@ -1,5 +1,5 @@
-#include "mcu_config.h"
 #include "gpio.h"
+#include "gpio_config.h"
 
 static void GPIO_OutputInit_void(GPIO_InitTypeDef *GPIO_Init)
 {
@@ -28,6 +28,7 @@ static void GPIO_InputInit_void(GPIO_InitTypeDef *GPIO_Init)
     }
 };
 
+#if ((MCU_CONFIG_PORT1_EXTI_IRQ_EN == ON) || (MCU_CONFIG_PORT2_EXTI_IRQ_EN == ON))
 static void GPIO_InterruptRisingEdgeInit_void(GPIO_InitTypeDef *GPIO_Init)
 {
     GPIO_Init->Base->PxIE       |= GPIO_Init->Pin;
@@ -41,6 +42,7 @@ static void GPIO_InterruptFallingEdgeInit_void(GPIO_InitTypeDef *GPIO_Init)
     GPIO_Init->Base->PxIES      |= GPIO_Init->Pin;
     GPIO_Init->Base->PxIFG      &= ~GPIO_Init->Pin;
 };
+#endif // ((MCU_CONFIG_PORT1_EXTI_IRQ_EN == ON) || (MCU_CONFIG_PORT2_EXTI_IRQ_EN == ON))
 
 void GPIO_init_void(GPIO_InitTypeDef *GPIO_Init)
 {
@@ -54,6 +56,7 @@ void GPIO_init_void(GPIO_InitTypeDef *GPIO_Init)
             GPIO_OutputInit_void(GPIO_Init);
             break;
 
+#if ((MCU_CONFIG_PORT1_EXTI_IRQ_EN == ON) || (MCU_CONFIG_PORT2_EXTI_IRQ_EN == ON))
         case GPIO_MODE_IT_RISING:
             GPIO_InterruptRisingEdgeInit_void(GPIO_Init);
             GPIO_InputInit_void(GPIO_Init);
@@ -63,6 +66,8 @@ void GPIO_init_void(GPIO_InitTypeDef *GPIO_Init)
             GPIO_InterruptFallingEdgeInit_void(GPIO_Init);
             GPIO_InputInit_void(GPIO_Init);
             break;
+
+#endif // ((MCU_CONFIG_PORT1_EXTI_IRQ_EN == ON) || (MCU_CONFIG_PORT2_EXTI_IRQ_EN == ON))
 
         default:
             break;
@@ -96,12 +101,14 @@ GPIO_State_u8 GPIO_getInputSignal_u8(GPIO_InitTypeDef *GPIO_Init)
     }
 };
 
+#if ((MCU_CONFIG_PORT1_EXTI_IRQ_EN == ON) || (MCU_CONFIG_PORT2_EXTI_IRQ_EN == ON))
 void __attribute__((weak)) GPIO_processingPortIRQ_void()
 {
     /* Note: This function should not be modified, when the processing is needed,
      *          the GPIO_processingPortIRQ_void could be implemented in the user file
      */
 };
+#endif // ((MCU_CONFIG_PORT1_EXTI_IRQ_EN == ON) || (MCU_CONFIG_PORT2_EXTI_IRQ_EN == ON))
 
 #if (MCU_CONFIG_PORT1_EXTI_IRQ_EN == ON)
 static bool GPIO_isInterruptPendingOnPort1_bool(GPIO_Pin_u8 GPIO_Pin)
@@ -131,7 +138,7 @@ __interrupt void GPIO_handlingPort1IRQ_void(void)
 void __attribute__ ((interrupt(PORT1_VECTOR))) GPIO_handlingPort1IRQ_void (void)
 #else
 #error Compiler not supported!
-#endif
+#endif // defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 {
     GPIO_port1IRQHandler_void(GPIO_PIN_3);
 };
@@ -165,8 +172,8 @@ __interrupt void GPIO_handlingPort2IRQ_void(void)
 void __attribute__ ((interrupt(PORT2_VECTOR))) GPIO_handlingPort2IRQ_void (void)
 #else
 #error Compiler not supported!
-#endif
+#endif //defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 {
-    GPIO_port2IRQHandler_void(GPIO_PIN_3);
+    GPIO_port2IRQHandler_void(GPIO_INTERRUPT_PIN);
 };
 #endif // MCU_CONFIG_PORT2_EXTI_IRQ_EN

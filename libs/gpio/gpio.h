@@ -1,5 +1,7 @@
+#ifndef __GPIO_H
+#define __GPIO_H
+
 #include <stdint.h>
-#include <stdbool.h>
 #include <msp430.h>
 
 #include "mcu_config.h"
@@ -53,9 +55,11 @@ typedef enum
     GPIO_MODE_INPUT,        /* Input Mode       */
     GPIO_MODE_OUTPUT,       /* Output Mode      */
 
+#if ((MCU_CONFIG_PORT1_EXTI_IRQ_EN == ON) || (MCU_CONFIG_PORT2_EXTI_IRQ_EN == ON))
     GPIO_MODE_IT_RISING,    /* External Interrupt Mode with Rising edge trigger detection       */
     GPIO_MODE_IT_FALLING,   /* External Interrupt Mode with Falling edge trigger detection      */
-} GPIO_Mode_u8;
+#endif // ((MCU_CONFIG_PORT1_EXTI_IRQ_EN == ON) || (MCU_CONFIG_PORT2_EXTI_IRQ_EN == ON))
+} __attribute__((__packed__)) GPIO_Mode_u8;
 /**
   * @}  
   */
@@ -68,7 +72,7 @@ typedef enum
     GPIO_NOPULL,            /* No Pull-up or Pull-down Activation   */
     GPIO_PULLUP,            /* Pull-up Activation                   */
     GPIO_PULLDOWN           /* Pull-down Activation                 */
-} GPIO_Pull_u8;
+} __attribute__((__packed__)) GPIO_Pull_u8;
 /**
   * @}  
   */
@@ -79,7 +83,7 @@ typedef enum
 {
     GPIO_LOW,
     GPIO_HIGH
-} GPIO_State_u8;
+} __attribute__((__packed__)) GPIO_State_u8;
 
 typedef struct
 {
@@ -98,3 +102,5 @@ void GPIO_toggleOutputSignal_void(GPIO_InitTypeDef *GPIO_Init);
 
 // Input
 GPIO_State_u8 GPIO_getInputSignal_u8(GPIO_InitTypeDef *GPIO_Init);
+
+#endif // __GPIO_H
