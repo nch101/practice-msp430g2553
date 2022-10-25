@@ -29,6 +29,11 @@ static void GPIO_InputInit_void(GPIO_InitTypeDef *GPIO_Init)
 };
 
 #if ((MCU_CONFIG_PORT1_EXTI_IRQ_EN == ON) || (MCU_CONFIG_PORT2_EXTI_IRQ_EN == ON))
+static void GPIO_enterLPM4Interrupt_void()
+{
+    __bis_SR_register(LPM4_bits + GIE);     // Enter LPM4 w/interrupt
+};
+
 static void GPIO_InterruptRisingEdgeInit_void(GPIO_InitTypeDef *GPIO_Init)
 {
     GPIO_Init->Base->PxIE       |= GPIO_Init->Pin;
@@ -72,6 +77,11 @@ void GPIO_init_void(GPIO_InitTypeDef *GPIO_Init)
         default:
             break;
     }
+
+#if ((MCU_CONFIG_PORT1_EXTI_IRQ_EN == ON) || (MCU_CONFIG_PORT2_EXTI_IRQ_EN == ON))
+    GPIO_enterLPM4Interrupt_void();
+#endif // ((MCU_CONFIG_PORT1_EXTI_IRQ_EN == ON) || (MCU_CONFIG_PORT2_EXTI_IRQ_EN == ON))
+
 };
 
 void GPIO_setOutputSignal_void(GPIO_InitTypeDef *GPIO_Init, GPIO_State_u8 GPIO_State)
@@ -111,24 +121,9 @@ void __attribute__((weak)) GPIO_processingPortIRQ_void()
 #endif // ((MCU_CONFIG_PORT1_EXTI_IRQ_EN == ON) || (MCU_CONFIG_PORT2_EXTI_IRQ_EN == ON))
 
 #if (MCU_CONFIG_PORT1_EXTI_IRQ_EN == ON)
-static bool GPIO_isInterruptPendingOnPort1_bool(GPIO_Pin_u8 GPIO_Pin)
+static boolean GPIO_isInterruptPendingOnPort1_boolean(GPIO_Pin_u8 GPIO_Pin)
 {
-    if ((GPIO_1->PxIFG & GPIO_Pin) == GPIO_Pin)
-    {
-        return true;
-    } else
-    {
-        return false;
-    }
-};
-
-static void GPIO_port1IRQHandler_void(GPIO_Pin_u8 GPIO_Pin)
-{
-    if (GPIO_isInterruptPendingOnPort1_bool(GPIO_Pin) == true)
-    {
-        GPIO_1->PxIFG &= ~GPIO_Pin;
-        GPIO_processingPortIRQ_void();
-    }
+    return (GPIO_1->PxIFG & GPIO_Pin) ? TRUE : FALSE;
 };
 
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
@@ -140,29 +135,18 @@ void __attribute__ ((interrupt(PORT1_VECTOR))) GPIO_handlingPort1IRQ_void (void)
 #error Compiler not supported!
 #endif // defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 {
-    GPIO_port1IRQHandler_void(GPIO_PIN_3);
+    if (GPIO_isInterruptPendingOnPort1_boolean(GPIO_INTERRUPT_PIN) == TRUE)
+    {
+        GPIO_1->PxIFG &= ~GPIO_INTERRUPT_PIN;
+        GPIO_processingPortIRQ_void();
+    }
 };
 #endif // MCU_CONFIG_PORT1_EXTI_IRQ_EN
 
 #if (MCU_CONFIG_PORT2_EXTI_IRQ_EN == ON)
-static bool GPIO_isInterruptPendingOnPort2_bool(GPIO_Pin_u8 GPIO_Pin)
+static boolean GPIO_isInterruptPendingOnPort2_boolean(GPIO_Pin_u8 GPIO_Pin)
 {
-    if ((GPIO_2->PxIFG & GPIO_Pin) == GPIO_Pin)
-    {
-        return true;
-    } else
-    {
-        return false;
-    }
-};
-
-static void GPIO_port2IRQHandler_void(GPIO_Pin_u8 GPIO_Pin)
-{
-    if (GPIO_isInterruptPendingOnPort2_bool(GPIO_Pin) == true)
-    {
-        GPIO_2->PxIFG &= ~GPIO_Pin;
-        GPIO_processingPortIRQ_void();
-    }
+    return (GPIO_2->PxIFG & GPIO_Pin) ? TRUE : FALSE;
 };
 
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
@@ -174,6 +158,10 @@ void __attribute__ ((interrupt(PORT2_VECTOR))) GPIO_handlingPort2IRQ_void (void)
 #error Compiler not supported!
 #endif //defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 {
-    GPIO_port2IRQHandler_void(GPIO_INTERRUPT_PIN);
+    if (GPIO_isInterruptPendingOnPort2_boolean(GPIO_INTERRUPT_PIN) == TRUE)
+    {
+        GPIO_2->PxIFG &= ~GPIO_INTERRUPT_PIN;
+        GPIO_processingPortIRQ_void();
+    }
 };
 #endif // MCU_CONFIG_PORT2_EXTI_IRQ_EN
