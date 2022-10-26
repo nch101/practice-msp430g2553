@@ -9,29 +9,45 @@ static void ADC_resetADCregister_void()
 
 static void ADC_defaultInit_void()
 {
-    ADC10_CONTROL_REG0->reg = ADC_SAMPLING_TIME_DEFAULT | ADC_SAMPLING_RATE_DEFAULT;
-    ADC10_CONTROL_REG1->reg = ADC_CLOCK_SOURCE_DEFAULT | ADC_CLOCK_PRESCALER_DEFAULT;
+#if (MCU_CONFIG_ADC_IRQ_EN == ON)
+    ADC10_CONTROL_REG0->reg |= ADC_INTERRUPT_ENABLE;
+#endif // (MCU_CONFIG_ADC_IRQ_EN == ON)
+
+    ADC10_CONTROL_REG0->reg = ADC_SAMPLING_TIME_DEFAULT \
+                            | ADC_SAMPLING_RATE_DEFAULT \
+                            | ADC_REFERENCE_OUTPUT_DEFAULT \
+                            | ADC_REFERENCE_BURST_DEFAULT \
+                            | ADC_MULTI_SAMPLE_CONVERSION \
+                            | ADC_REF_GENERATOR_VOLTAGE \
+                            | ADC_REF_GENERATOR_DEFAULT;
+
+    ADC10_CONTROL_REG1->reg = ADC_SAMPLE_HOLD_SRC_DEFAULT \
+                            | ADC_DATA_FORMAT_DEFAULT \
+                            | ADC_INVERT_SIGNAL_DEFAULT \
+                            | ADC_CLOCK_PRESCALER_DEFAULT \
+                            | ADC_CLOCK_SOURCE_DEFAULT \
+                            | ADC_CONVERSION_MODE_DEFAULT;
 };
 
 static void ADC_inputPinModeInit_void(ADC_InitTypeDef *ADC_Init)
 {
-#if (MCU_CONFIG_ADC_IRQ_EN == ON)
-    ADC10_CONTROL_REG0->reg |= ADC_INTERRUPT_ENABLE;
-#endif // (MCU_CONFIG_ADC_IRQ_EN == ON)
-    ADC10_CONTROL_REG0->reg |= ADC10ON;
-    ADC10_CONTROL_REG1->reg |= ADC_Init->Channel + ADC_Init->Format;
-
+    ADC10_CONTROL_REG0->reg |= ADC_Init->Ref;
+    ADC10_CONTROL_REG1->reg |= ADC_Init->Channel;
     ADC10_INPUT_ENABLE_REG  |= ADC_Init->Pin;
 };
 
 static void ADC_temperatureSensorModeInit_void(ADC_InitTypeDef *ADC_Init)
 {
-    // Todo: 
+    ADC10_CONTROL_REG0->reg &= ~(SREF_7 | ADC_REF_ON);
+    ADC10_CONTROL_REG0->reg |=  SREF_1 + ADC_REF_ON;
+
+    ADC10_CONTROL_REG1->reg &= ~ADC_BIT15_IS_MSB;
+    ADC10_CONTROL_REG1->reg |= ADC_CHANNEL_10 + ADC_BIT9_IS_MSB;
 };
 
 static void ADC_voltageComparisonModeInit_void(ADC_InitTypeDef *ADC_Init)
 {
-    // Todo: 
+    ADC10_CONTROL_REG0->reg |= ADC_Init->Channel;
 };
 
 void ADC_init_void(ADC_InitTypeDef *ADC_Init)
@@ -66,6 +82,20 @@ void ADC_startSamplingAndConversion_void()
 uint16_t ADC_getADCValue_u16()
 {
     return ADC10MEM;
+};
+
+uint16_t ADC_getDegreeFarenheit()
+{
+    // oF = ((A10/1024)*1500mV)-923mV)*1/1.97mV = A10*761/1024 - 468
+    uint16_t temp = ADC_getADCValue_u16();
+    return ((temp - 630) * 761) / 1024;
+};
+
+uint16_t ADC_getDegreeCelsius()
+{
+    // oC = ((A10/1024)*1500mV)-986mV)*1/3.55mV = A10*423/1024 - 278
+    uint16_t temp = ADC_getADCValue_u16();
+    return ((temp - 673) * 423) / 1024;
 };
 
 uint8_t ADC_isADC10Busy_u8()

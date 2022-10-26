@@ -138,13 +138,19 @@ typedef enum
 #define ADC_SAMPLERATE_50KSPS       ((uint16_t)0x0400)  /* Reference buffer 50 ksps */
 
 /* ADC reference output */
-#define ADC_REFOUTPUT_ON            REFOUT              /* ADC10 Reference on */
+#define ADC_REFOUTPUT_OFF           ((uint16_t)0x0000)  /* ADC10 Reference output off */
+#define ADC_REFOUTPUT_ON            REFOUT              /* ADC10 Reference output on */
 
 /* ADC reference burst */
-#define ADC_REFBURST_MODE_ON        REFBURST            /* ADC10 Reference Burst Mode */
+#define ADC_REFBURST_MODE_OFF       ((uint16_t)0x0000)  /* Reference buffer on continuously */
+#define ADC_REFBURST_MODE_ON        REFBURST            /* Reference buffer on only during sample-and-conversion */
 
 /* ADC Multiple Sample Conversion */
-#define ADC_MSC                     MSC
+#define ADC_MSC_OFF                 ((uint16_t)0x0000)  /* The sampling requires a rising edge of the SHI signal
+                                                         * to trigger each sample-and-conversion. */
+#define ADC_MSC_ON                  MSC                 /* The first rising edge of the SHI signal triggers the
+                                                         * sampling timer, but further sample-and-conversions are performed
+                                                         * automatically as soon as the prior conversion is completed */
 
 /* ADC data format */
 #define ADC_BIT9_IS_MSB             ((uint16_t)0x0)
@@ -155,6 +161,7 @@ typedef enum
 #define ADC_REF2_5V                 REF2_5V
 
 /* ADC Reference on */
+#define ADC_REF_OFF                 ((uint16_t)0x0)     /* ADC10 Reference off */
 #define ADC_REF_ON                  REFON               /* ADC10 Reference on */
 
 /* ADC interrupt enable */
@@ -165,6 +172,10 @@ typedef enum
 
 /* ADC start conversion */
 #define ADC_CONVERSION_START        ADC10SC
+
+/* ADC invert signal sample-and hold */
+#define ADC_NOT_INVERTED            ((uint16_t)0x0)     /* The sample-input signal is not inverted. */
+#define ADC_INVERTED                ISSH                /* The sample-input signal is inverted. */
 
 /* ADC clock prescaler */
 #define ADC_CLOCK_PCLK_DIV1         ADC10DIV_0
@@ -197,9 +208,9 @@ typedef enum
 /* Structure definition of ADC and regular group initialization */
 typedef struct
 {
+    uint16_t        Ref;
     uint16_t        Channel;
     uint16_t        Pin;
-    uint16_t        Format;
     ADC_Mode_u8     Mode;
 } ADC_InitTypeDef;
 
@@ -207,6 +218,8 @@ typedef struct
 void ADC_init_void(ADC_InitTypeDef *ADC_Init);
 void ADC_startSamplingAndConversion_void();
 uint16_t ADC_getADCValue_u16();
+uint16_t ADC_getDegreeFarenheit();
+uint16_t ADC_getDegreeCelsius();
 uint8_t ADC_isADCBusy_u8();
 
 #endif // __ADC_H
