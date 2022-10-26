@@ -25,8 +25,6 @@
 #define GPIO_BASE_2         0x0028
 #define GPIO_BASE_3         0x0018
 
-#define __IO                volatile
-
 /** 
   * @brief General Purpose I/O
   */
