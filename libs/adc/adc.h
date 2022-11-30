@@ -218,8 +218,8 @@ typedef struct
 void ADC_init_void(ADC_InitTypeDef *ADC_Init);
 void ADC_startSamplingAndConversion_void();
 uint16_t ADC_getADCValue_u16();
-uint16_t ADC_getDegreeFarenheit();
-uint16_t ADC_getDegreeCelsius();
+int16_t ADC_getDegreeFarenheit_s16();
+int16_t ADC_getDegreeCelsius_s16();
 uint8_t ADC_isADCBusy_u8();
 
 #endif // __ADC_H
