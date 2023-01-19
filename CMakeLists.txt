@@ -70,3 +70,5 @@ add_custom_command(TARGET ${EXECUTABLE} POST_BUILD
 add_custom_target(flash
     COMMAND mspdebug -q rf2500 "prog ${EXECUTABLE}.hex"
 )
+
+# Hello world
