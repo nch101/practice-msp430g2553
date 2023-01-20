@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "/opt/msp430-gcc/include",
+                "/opt/msp430-gcc/msp430-elf/include",
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/app",
+                "${workspaceFolder}/libs/gpio"
+            ],
+            "defines": [],
+            "compilerPath": "/opt/msp430-gcc/bin/msp430-elf-gcc",
+            "cStandard": "gnu17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-arm"
+        }
+    ],
+    "version": 4
+}
